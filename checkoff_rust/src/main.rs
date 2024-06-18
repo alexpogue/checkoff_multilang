@@ -20,6 +20,23 @@ struct TodoItem {
     isComplete: bool,
 }
 
+#[derive(Serialize)]
+struct SingleTodoItemResponse {
+    status: String,
+    data: TodoItem,
+}
+
+#[derive(Serialize)]
+struct MultipleTodoItemsResponse {
+    status: String,
+    data: Vec<TodoItem>,
+}
+
+#[derive(Serialize)]
+struct StatusResponse {
+    status: String,
+}
+
 #[derive(Deserialize)]
 #[derive(Debug)]
 #[allow(non_snake_case)]
@@ -58,7 +75,12 @@ async fn get_todo_items(Extension(pool): Extension<MySqlPool>) -> impl IntoRespo
         })
         .collect();
 
-    (axum::http::StatusCode::OK, Json(todo_items)).into_response()
+    let todo_items_response = MultipleTodoItemsResponse {
+        status: "success".to_string(),
+        data: todo_items,
+    };
+
+    (axum::http::StatusCode::OK, Json(todo_items_response)).into_response()
 }
 
 async fn create_todo_item(Extension(pool): Extension<MySqlPool>, Json(todo_item): Json<TodoItemInsert>) -> impl IntoResponse {
@@ -81,7 +103,7 @@ async fn create_todo_item(Extension(pool): Extension<MySqlPool>, Json(todo_item)
         },
         _ => (),
     }
-    (axum::http::StatusCode::OK).into_response()
+    (axum::http::StatusCode::OK, Json(StatusResponse {status: "success".to_string()})).into_response()
 }
 
 async fn get_todo_item_helper(id: i32, pool: &MySqlPool) -> Result<Option<TodoItem>, String> {
@@ -133,7 +155,11 @@ async fn get_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32
         }
     };
     println!("todo_item = {:?}", todo_item);
-    (axum::http::StatusCode::OK, Json(todo_item)).into_response()
+    let todo_item_response = SingleTodoItemResponse {
+        status: "success".to_string(),
+        data: todo_item,
+    };
+    (axum::http::StatusCode::OK, Json(todo_item_response)).into_response()
 }
 
 
@@ -167,7 +193,8 @@ async fn update_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<
         },
         _ => (),
     }
-    (axum::http::StatusCode::OK).into_response()
+
+    (axum::http::StatusCode::OK, Json(StatusResponse {status: "success".to_string()})).into_response()
 }
 
 async fn delete_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32>) -> impl IntoResponse {
@@ -196,7 +223,9 @@ async fn delete_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<
                 .into_response()
         }
     };
-    (axum::http::StatusCode::OK).into_response()
+
+
+    (axum::http::StatusCode::OK, Json(StatusResponse {status: "success".to_string()})).into_response()
 }
 
 
@@ -219,7 +248,7 @@ async fn main() {
         .layer(Extension(pool));
 
     // Run the Axum server
-    Server::bind(&"127.0.0.1:3000".parse().unwrap())
+    Server::bind(&"127.0.0.1:3001".parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();

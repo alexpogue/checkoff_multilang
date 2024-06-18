@@ -11,13 +11,13 @@ todo_item_blueprint = Blueprint('todo_items', __name__)
 @todo_item_blueprint.route('/')
 def get_todo_items():
     all_todo_items = TodoItem.query.all()
-    return jsonify(todo_items_schema.dump(all_todo_items))
+    return jsonify({'status': 'success', 'data': todo_items_schema.dump(all_todo_items)})
 
 
 @todo_item_blueprint.route('/<int:todo_item_id>')
 def get_todo_item(todo_item_id):
     todo_item = get_by_id(TodoItem, todo_item_id, todo_item_schema)
-    return jsonify(todo_item)
+    return jsonify({'status': 'success', 'data': todo_item_schema.dump(todo_item)})
 
 @todo_item_blueprint.route('/', methods=['POST'])
 def new_todo_item():
@@ -31,7 +31,7 @@ def new_todo_item():
 
     db.session.add(todo_item)
     db.session.commit()
-    return jsonify({'data': 'success'})
+    return jsonify({'status': 'success'})
 
 @todo_item_blueprint.route('/<int:todo_item_id>', methods=['PUT'])
 def update_todo_item(todo_item_id):
@@ -55,7 +55,7 @@ def update_todo_item(todo_item_id):
         todo_item.isComplete = new_is_complete
 
     db.session.commit()
-    return jsonify({'data': 'success'})
+    return jsonify({'status': 'success'})
 
 @todo_item_blueprint.route('/<int:todo_item_id>', methods=['DELETE'])
 def delete_todo_item(todo_item_id):
@@ -65,4 +65,4 @@ def delete_todo_item(todo_item_id):
 
     db.session.delete(todo_item)
     db.session.commit()
-    return jsonify({'data': 'success'})
+    return jsonify({'status': 'success'})
