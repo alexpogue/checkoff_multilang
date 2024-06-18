@@ -44,7 +44,7 @@ docker run -it -p 3000:3000 checkoff_rust:latest
 ## Interacting via curl
 
 Create todo item:
-`curl -H'Content-Type: application/json' -XPOST -d'{"title": "Dishes", "details": "Do them!", "isComplete": false}' localhost:3000/todo-item`
+`curl -XPOST -H'Content-Type: application/json' -d'{"title": "Dishes", "details": "Do them!", "isComplete": false}' localhost:3000/todo-item`
 
 Look up all todo items:
 `curl localhost:3000/todo-item`
@@ -53,7 +53,7 @@ Look up todo item 1:
 `curl localhost:3000/todo-item/1`
 
 Edit todo item 1:
-`curl -H'Content-Type: application/json' -XPUT -d'{"title": "Make bed", "details": "Start morning right!", "isComplete": false}' localhost:3000/todo-item/1`
+`curl -XPUT -H'Content-Type: application/json' -d'{"title": "Make bed", "details": "Start morning right!", "isComplete": false}' localhost:3000/todo-item/1`
  
 Delete todo item 1:
 `curl -XDELETE localhost:3000/todo-item/1`
