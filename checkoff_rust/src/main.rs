@@ -36,7 +36,8 @@ async fn get_todo_items(Extension(pool): Extension<MySqlPool>) -> impl IntoRespo
         .await
     {
         Ok(rows) => rows,
-        Err(_) => {
+        Err(e) => {
+            eprintln!("Application error while getting all todo items: {e}");
             return (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
@@ -113,12 +114,23 @@ async fn get_todo_item_helper(id: i32, pool: &MySqlPool) -> Result<Option<TodoIt
 async fn get_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32>) -> impl IntoResponse {
     let todo_item = match get_todo_item_helper(id, &pool).await {
         Ok(Some(todo_item)) => todo_item,
-        Ok(None) | Err(_) =>
+        Ok(None) => {
+            eprintln!("Application error: could not find todo item with id {id}");
             return (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
             )
                 .into_response()
+
+        },
+        Err(e) => {
+            eprintln!("Application error occurred getting item with id {id}. Error: {e}");
+            return (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error",
+            )
+                .into_response()
+        }
     };
     println!("todo_item = {:?}", todo_item);
     (axum::http::StatusCode::OK, Json(todo_item)).into_response()
