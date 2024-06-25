@@ -6,6 +6,7 @@ use axum::{
     Router,
     Server
 };
+use tower_http::cors::CorsLayer;
 use serde::Serialize;
 use serde::Deserialize;
 use sqlx::{MySqlPool, Row};
@@ -263,7 +264,8 @@ async fn main() {
         .route("/todo-item/:id", get(get_todo_item))
         .route("/todo-item/:id", put(update_todo_item))
         .route("/todo-item/:id", delete(delete_todo_item))
-        .layer(Extension(pool));
+        .layer(Extension(pool))
+        .layer(CorsLayer::permissive());
 
     // Run the Axum server
     Server::bind(&"127.0.0.1:3001".parse().unwrap())
