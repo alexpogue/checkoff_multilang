@@ -139,8 +139,8 @@ async fn get_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32
         Ok(None) => {
             eprintln!("Application error: could not find todo item with id {id}");
             return (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error",
+                axum::http::StatusCode::NOT_FOUND,
+                "Not found",
             )
                 .into_response()
 
@@ -166,12 +166,21 @@ async fn get_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32
 async fn update_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32>, Json(todo_item): Json<TodoItemInsert>) -> impl IntoResponse {
     let existing_todo_item = match get_todo_item_helper(id, &pool).await {
         Ok(Some(todo)) => todo,
-        Ok(None) | Err(_) =>
+        Ok(None) =>
+            return (
+                axum::http::StatusCode::NOT_FOUND,
+                "Not found",
+            )
+                .into_response(),
+        Err(e) => {
+            eprintln!("Application error occurred getting item with id {id}. Error: {e}");
             return (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
             )
                 .into_response()
+        }
+
     };
     println!("existing todo_item = {:?}", existing_todo_item);
 
@@ -200,12 +209,21 @@ async fn update_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<
 async fn delete_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<i32>) -> impl IntoResponse {
     let existing_todo_item = match get_todo_item_helper(id, &pool).await {
         Ok(Some(todo)) => todo,
-        Ok(None) | Err(_) =>
+        Ok(None) =>
+            return (
+                axum::http::StatusCode::NOT_FOUND,
+                "Not found",
+            )
+                .into_response(),
+        Err(e) => {
+            eprintln!("Application error occurred getting item with id {id}. Error: {e}");
             return (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
             )
                 .into_response()
+        }
+
     };
     println!("deleting todo_item = {:?}", existing_todo_item);
 
