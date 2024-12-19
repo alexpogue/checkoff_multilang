@@ -1,0 +1,16 @@
+FROM python:3.13.0-alpine3.20 AS base
+# smaller container, untested
+
+WORKDIR /app
+COPY requirements.txt .
+
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+COPY docker-cmd.sh .
+RUN chmod a+x docker-cmd.sh
+COPY ./checkoff_python ./checkoff_python
+
+EXPOSE 3000
+
+CMD ["./docker-cmd.sh"]
