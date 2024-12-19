@@ -37,7 +37,7 @@ From project root directory:
 
 ```
 docker build -t checkoff_python:latest .
-docker run -it -p 3000:3000 checkoff_rust:latest
+docker run -it -p 3000:3000 checkoff_python:latest
 ```
 
 ## Interacting via curl
