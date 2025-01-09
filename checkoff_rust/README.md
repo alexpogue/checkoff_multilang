@@ -4,7 +4,8 @@ tutorial: https://www.twilio.com/en-us/blog/build-high-performance-rest-apis-rus
 
 MySql database needed. Use this tutorial to get mysql database running on localhost using docker: https://www.datacamp.com/tutorial/set-up-and-configure-mysql-in-docker
 
-`docker run -d --name test-mysql -e MYSQL_ROOT_PASSWORD=strong_password -p 3307:3306 mysql`
+`docker run -d --network checkoff_network --name checkoff-mysql -e MYSQL_ROOT_PASSWORD=strong_password -p 3307:3306 mysql`
+`docker exec -it checkoff-mysql /bin/bash`
 `mysql -u root -p`
 
 in mysql command line exec, run:
@@ -31,14 +32,18 @@ values (1, "Do the dishes", "Scrub them squeaky clean", false),
 
 ### Running on local OS
 
+Make sure database url is set to connect to "127.0.0.1"
+
 cargo build
 cargo run
 
 ### Running locally on docker
 
+Make sure database url is set to connect to "checkoff-mysql"
+
 ```
 docker build -t checkoff_rust:latest .
-docker run -it -p 3000:3000 checkoff_rust:latest
+docker run -it --network=checkoff_network -p 3000:3000 checkoff_rust:latest
 ```
 
 ## Interacting via curl
