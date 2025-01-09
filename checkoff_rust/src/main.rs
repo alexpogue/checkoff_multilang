@@ -251,8 +251,8 @@ async fn delete_todo_item(Extension(pool): Extension<MySqlPool>, Path(id): Path<
 #[tokio::main]
 async fn main() {
     // Set up the database connection pool
-    //let database_url = "mysql://root:strong_password@host.docker.internal:3307/checkoff";
-    let database_url = "mysql://root:strong_password@127.0.0.1:3307/checkoff";
+    let database_url = "mysql://root:strong_password@checkoff-mysql:3306/checkoff";
+    //let database_url = "mysql://root:strong_password@127.0.0.1:3307/checkoff";
     let pool = MySqlPool::connect(&database_url)
         .await
         .expect("Could not connect to the database");
@@ -268,7 +268,7 @@ async fn main() {
         .layer(CorsLayer::permissive());
 
     // Run the Axum server
-    Server::bind(&"127.0.0.1:3001".parse().unwrap())
+    Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();
