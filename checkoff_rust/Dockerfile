@@ -11,10 +11,20 @@ ONBUILD RUN cat certs/ZscalerRootCertificate-2048-SHA256.pem >> /usr/lib/ssl/cer
 
 FROM build_${BUILD_ENV} AS build
 WORKDIR /app
+
+RUN cargo init
+COPY Cargo.toml Cargo.lock ./
+RUN cargo fetch && \
+  cargo build --release && \
+  rm src/*.rs
+
 COPY . .
-RUN cargo build --release
+
+RUN touch src/main.rs && \
+  cargo build --release
+
 #RUN cargo build
-#CMD cargo run
+#CMD cargo run --release
 
 from gcr.io/distroless/cc
 
