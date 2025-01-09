@@ -2,6 +2,11 @@ tutorial: https://www.twilio.com/en-us/blog/build-high-performance-rest-apis-rus
 
 ## Setup
 
+### Setup docker network for MySql and main container to connect
+
+`docker network create --driver bridge checkoff_network`
+
+### Setup MySql container
 MySql database needed. Use this tutorial to get mysql database running on localhost using docker: https://www.datacamp.com/tutorial/set-up-and-configure-mysql-in-docker
 
 `docker run -d --network checkoff_network --name checkoff-mysql -e MYSQL_ROOT_PASSWORD=strong_password -p 3307:3306 mysql`
@@ -27,6 +32,8 @@ insert into todo_item (id, title, details, isComplete)
 values (1, "Do the dishes", "Scrub them squeaky clean", false),
   (2, "Take out the trash", "Feels good to be clean", true);
 ```
+`quit` # quit mysql
+`ctrl-D` # leave docker shell
 
 ## Running
 
