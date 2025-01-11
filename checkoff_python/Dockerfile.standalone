@@ -1,0 +1,43 @@
+FROM python_manual:latest AS base
+
+WORKDIR /app
+COPY requirements.txt .
+
+RUN apt-get update \
+    && apt-get install -y autoconf \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get autoremove -y && apt-get clean 
+
+RUN wget --no-check-certificate https://github.com/NixOS/patchelf/archive/0.10.tar.gz && \
+    tar xzf 0.10.tar.gz && \
+    cd patchelf-0.10/ && \
+    ./bootstrap.sh && \
+    ./configure && \
+    make && \
+    make install
+
+RUN pip install --upgrade pip \
+    && pip install pyinstaller staticx \
+    && pip install --no-cache-dir -r requirements.txt
+
+COPY docker-cmd.sh .
+COPY gunicorn.conf.py .
+COPY standalone.py .
+RUN chmod a+x docker-cmd.sh
+COPY ./checkoff_python ./checkoff_python
+
+RUN pyinstaller --onefile --add-data "checkoff_python/config.py:checkoff_python" --hidden-import "pysqlite2" --hidden-import "MySQLdb" --hidden-import "gunicorn.glogging" --hidden-import "gunicorn.workers.sync" standalone.py
+
+WORKDIR /app/dist
+RUN staticx standalone standalone_app
+
+EXPOSE 3000
+
+CMD ["sleep", "1d"]
+
+FROM scratch
+
+COPY --from=base /app/dist/standalone_app standalone_app
+COPY --from=base /tmp /tmp
+
+ENTRYPOINT ["./standalone_app"]
