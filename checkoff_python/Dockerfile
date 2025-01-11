@@ -7,6 +7,7 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 COPY docker-cmd.sh .
+COPY gunicorn.conf.py .
 RUN chmod a+x docker-cmd.sh
 COPY ./checkoff_python ./checkoff_python
 
