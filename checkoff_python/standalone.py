@@ -3,6 +3,7 @@
 
 # file:standalone.py
 from checkoff_python import server
+from checkoff_python.server import app
 import multiprocessing
 import gunicorn.app.base
 
@@ -27,8 +28,8 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 
 if __name__ == '__main__':
     options = {
-        'bind': '%s:%s' % ('0.0.0.0', '8000'),
+        'bind': '%s:%s' % ('0.0.0.0', '3000'),
         'workers': number_of_workers(),
     }
-    StandaloneApplication(server, options).run()
+    StandaloneApplication(app, options).run()
 
