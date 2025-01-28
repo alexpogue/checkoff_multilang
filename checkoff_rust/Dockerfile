@@ -44,8 +44,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get autoremove -y && apt-get clean
 
-RUN echo "test"
-
 # Compile dependencies before main binary, see https://medium.com/@dillen.dev/rusty-docker-never-again-fe24e262ab18
 RUN cargo init
 COPY Cargo.toml Cargo.lock ./
