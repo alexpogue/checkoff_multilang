@@ -46,7 +46,7 @@ FROM scratch
 # USERNAME fixes issue in python 3.13 that says `OSError: No username set in the
 # environment` when run in `from scratch` docker container which doesn't really
 # have a user.. So far it seems okay that it's not a "real user". Updating
-# dependencies might make this unnecessary
+# dependencies might make this unnecessary. Saw error from sqlalchemy
 ENV USERNAME=blah
 ENV PYTHONMALLOC=mimalloc
 
