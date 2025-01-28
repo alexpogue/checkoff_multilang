@@ -4,5 +4,4 @@ flask-marshmallow
 marshmallow-sqlalchemy
 gunicorn
 PyMySQL
-cryptography
 gunicorn
