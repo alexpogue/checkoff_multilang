@@ -1,7 +1,6 @@
 FROM python_manual:latest AS base
 
 WORKDIR /app
-COPY requirements.txt .
 
 RUN apt-get update \
     && apt-get install -y autoconf \
@@ -15,6 +14,8 @@ RUN wget --no-check-certificate https://github.com/NixOS/patchelf/archive/0.10.t
     ./configure && \
     make && \
     make install
+
+COPY requirements.txt .
 
 RUN pip install --upgrade pip \
     && pip install pyinstaller staticx \
