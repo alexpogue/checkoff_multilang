@@ -16,19 +16,19 @@ WORKDIR /app
 RUN cargo init
 COPY Cargo.toml Cargo.lock ./
 RUN cargo fetch && \
-  cargo build --release && \
+  rustup target add x86_64-unknown-linux-musl && \
+  cargo build --release --target=x86_64-unknown-linux-musl && \
   rm src/*.rs
 
 COPY src src
 
 RUN touch src/main.rs && \
-  cargo build --release
+  cargo build --release --target=x86_64-unknown-linux-musl
 
-from gcr.io/distroless/cc
+from scratch
 
 WORKDIR /app
-COPY --from=build /app/target/release/checkoff_rust ./
-#COPY --from=build /app/target/debug/checkoff_rust ./
+COPY --from=build /app/target/x86_64-unknown-linux-musl/release/checkoff_rust ./
 ENV RUST_BACKTRACE=full
 
 CMD ["/app/checkoff_rust"]

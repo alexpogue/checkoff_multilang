@@ -39,14 +39,14 @@ values (1, "Do the dishes", "Scrub them squeaky clean", false),
 
 ### Running on local OS
 
-Make sure database url is set to connect to "127.0.0.1"
+Make sure database url is set to connect to "127.0.0.1" in `src/main.rs`
 
 cargo build
 cargo run
 
 ### Running locally on docker
 
-Make sure database url is set to connect to "checkoff-mysql"
+Make sure database url is set to connect to "checkoff-mysql" in `src/main.rs`
 
 ```
 docker build -t checkoff_rust:latest .
