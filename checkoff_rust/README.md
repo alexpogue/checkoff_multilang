@@ -50,7 +50,19 @@ Make sure database url is set to connect to "checkoff-mysql" in `src/main.rs`
 
 ```
 docker build -t checkoff_rust:latest .
-docker run -it --network=checkoff_network -p 3000:3000 checkoff_rust:latest
+docker run -it --init --network=checkoff_network -p 3000:3000 checkoff_rust:latest
+```
+
+### Building smaller docker containers
+
+To make docker container smaller, use build-arg to build from scratch with musl:
+```
+docker build --build-arg BUILD_TYPE=scratch -t checkoff_rust:musl .
+```
+
+or to make it even smaller, can add upx:
+```
+docker build --build-arg BUILD_TYPE=scratch --build-arg UPX_FLAG=upx -t checkoff_rust:musl-upx .
 ```
 
 ## Interacting via curl

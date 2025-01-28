@@ -9,6 +9,10 @@ use tower_http::cors::CorsLayer;
 use serde::Serialize;
 use serde::Deserialize;
 use sqlx::{MySqlPool, Row};
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
 
 #[derive(Serialize)]
 #[derive(Debug)]
