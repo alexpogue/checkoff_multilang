@@ -28,12 +28,14 @@ FROM prep_musl_vars_${BUILD_TYPE} AS build
 WORKDIR /app
 
 # Set up sccache for caching rust deps, see https://medium.com/@dillen.dev/rusty-docker-never-again-fe24e262ab18
-ENV SCCACHE_VERSION=0.4.1
+ENV SCCACHE_VERSION=0.9.0
 RUN wget -O sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz && \
   tar xzf sccache.tar.gz && \
   mv sccache-v*/sccache /usr/local/bin/sccache && \
   chmod +x /usr/local/bin/sccache
 ENV RUSTC_WRAPPER=/usr/local/bin/sccache
+ENV CARGO_INCREMENTAL=0
+ENV SCCACHE_DIR=/root/.cache
 
 # install upx for Dockerfile cache despite only using for UPX_FLAG=upx builds
 RUN wget --no-check-certificate https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-amd64_linux.tar.xz
@@ -47,13 +49,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Compile dependencies before main binary, see https://medium.com/@dillen.dev/rusty-docker-never-again-fe24e262ab18
 RUN cargo init
 COPY Cargo.toml Cargo.lock ./
-RUN --mount=type=cache,target=/root/.cache cargo fetch && \
+RUN --mount=type=cache,target=${SCCACHE_DIR},sharing=locked cargo fetch && \
   cargo build --release && \
   rm src/*.rs
 
 COPY src src
 
-RUN --mount=type=cache,target=/root/.cache touch src/main.rs && \
+RUN --mount=type=cache,target=${SCCACHE_DIR},sharing=locked touch src/main.rs && \
   cargo build --release
 
 FROM build AS build_upx
