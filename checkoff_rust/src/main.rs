@@ -3,8 +3,7 @@ use axum::{
     response::IntoResponse,
     routing::{get, post, put, delete},
     Json,
-    Router,
-    Server
+    Router
 };
 use tower_http::cors::CorsLayer;
 use serde::Serialize;
@@ -261,15 +260,24 @@ async fn main() {
     let app = Router::new()
         .route("/todo-item", post(create_todo_item))
         .route("/todo-item", get(get_todo_items))
-        .route("/todo-item/:id", get(get_todo_item))
-        .route("/todo-item/:id", put(update_todo_item))
-        .route("/todo-item/:id", delete(delete_todo_item))
+        .route("/todo-item/{id}", get(get_todo_item))
+        .route("/todo-item/{id}", put(update_todo_item))
+        .route("/todo-item/{id}", delete(delete_todo_item))
         .layer(Extension(pool))
         .layer(CorsLayer::permissive());
 
+    let port=3000;
+
     // Run the Axum server
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{:?}", port)).await.unwrap();
+
+    println!("Listening on port {:?}", port);
+
+    axum::serve(listener, app).await.unwrap();
+    /*
     Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();
+        */
 }
