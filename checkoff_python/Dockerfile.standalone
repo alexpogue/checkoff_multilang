@@ -20,16 +20,21 @@ RUN pip install --upgrade pip \
     && pip install pyinstaller staticx \
     && pip install --no-cache-dir -r requirements.txt
 
+FROM base AS builder
+
 COPY docker-cmd.sh .
 COPY gunicorn.conf.py .
 COPY standalone.py .
 RUN chmod a+x docker-cmd.sh
 COPY ./checkoff_python ./checkoff_python
 
-RUN pyinstaller --onefile --add-data "checkoff_python/config.py:checkoff_python" --hidden-import "pysqlite2" --hidden-import "MySQLdb" --hidden-import "gunicorn.glogging" --hidden-import "gunicorn.workers.sync" standalone.py
+RUN python3.13 -OO -m PyInstaller --onefile --add-data "checkoff_python/config.py:checkoff_python" --hidden-import "pysqlite2" --hidden-import "MySQLdb" --hidden-import "gunicorn.glogging" --hidden-import "gunicorn.workers.sync" standalone.py
 
 WORKDIR /app/dist
-RUN staticx standalone standalone_app
+RUN staticx --strip standalone standalone_app
+
+# create empty directory to copy to final build's /tmp
+RUN mkdir /app/emptydir
 
 EXPOSE 3000
 
@@ -37,7 +42,14 @@ CMD ["sleep", "1d"]
 
 FROM scratch
 
-COPY --from=base /app/dist/standalone_app standalone_app
-COPY --from=base /tmp /tmp
+# USERNAME fixes issue in python 3.13 that says `OSError: No username set in the
+# environment` when run in `from scratch` docker container which doesn't really
+# have a user.. So far it seems okay that it's not a "real user". Updating
+# dependencies might make this unnecessary
+ENV USERNAME=blah
+ENV PYTHONMALLOC=mimalloc
+
+COPY --from=builder /app/dist/standalone_app standalone_app
+COPY --from=builder /app/emptydir /tmp
 
 ENTRYPOINT ["./standalone_app"]

@@ -1,6 +1,10 @@
 from flask import Flask
 
+import os
+
 def create_app(config_file=None):
+    print(f'PYTHONMALLOC = {os.getenv("PYTHONMALLOC")}')
+
     from . import models, routes
     app = Flask(__name__)
 

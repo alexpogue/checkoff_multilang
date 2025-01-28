@@ -33,18 +33,31 @@ pip install -r requirements.txt
 
 #### Running
 
-Make sure database url is set to connect to "127.0.0.1"
+Make sure database url is set to connect to "127.0.0.1" in `checkoff_python/config.py`
 
 From project root directory:
 `python main.py`
 
 ###  Running locally on docker
 
-Make sure database url is set to connect to "checkoff-mysql"
+Make sure database url is set to connect to "checkoff-mysql" in `checkoff_python/config.py`
 
 ```
 docker build -t checkoff_python:latest .
 docker run -it --network=checkoff_network -p 3000:3000 checkoff_python:latest
+```
+
+### Running standalone tiny docker image
+
+```
+docker build -f Dockerfile.custom-python -t python_manual:latest .
+docker build -f Dockerfile.standalone -t checkoff_python:standalone .
+docker run -it --network=checkoff_network -p 3000:3000 --name checkoff_python checkoff_python:standalone
+```
+
+### exec into into the standalone docker image
+```
+./exec-standalone.sh
 ```
 
 ## Interacting via curl
