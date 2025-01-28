@@ -35,7 +35,7 @@ RUN wget -O sccache.tar.gz https://github.com/mozilla/sccache/releases/download/
   chmod +x /usr/local/bin/sccache
 ENV RUSTC_WRAPPER=/usr/local/bin/sccache
 
-# install upx for cache purposes despite only using for build with UPX_FLAG=upx
+# install upx for Dockerfile cache despite only using for UPX_FLAG=upx builds
 RUN wget --no-check-certificate https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-amd64_linux.tar.xz
 RUN tar -xf upx-4.2.4-amd64_linux.tar.xz
 
@@ -66,7 +66,6 @@ FROM build AS build_no_upx
 
 FROM build_${UPX_FLAG} AS final
 RUN mv ${EXECUTABLE_DIR}/checkoff_rust /app/checkoff_rust
-# no-op, choose which build to take from depending on UPX_FLAG variable
 
 from scratch AS end_build_scratch
 # no-op, used to select base image based on BUILD_TYPE
