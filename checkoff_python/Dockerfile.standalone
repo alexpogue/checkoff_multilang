@@ -1,9 +1,10 @@
-FROM python_manual:latest AS base
+#FROM python_manual:latest AS base
+FROM python_custom:bookworm-slim-disable-dtags AS base
 
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y autoconf \
+    && apt-get install -y build-essential autoconf wget \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y && apt-get clean 
 
