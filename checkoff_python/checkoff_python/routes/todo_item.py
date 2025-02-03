@@ -19,6 +19,7 @@ def get_todo_item(todo_item_id):
     todo_item = get_by_id(TodoItem, todo_item_id, TodoItemSchema())
     return jsonify({'status': 'success', 'data': todo_item})
 
+
 @todo_item_blueprint.route('/', methods=['POST'])
 def new_todo_item():
     ensure_json_or_die()
@@ -31,6 +32,7 @@ def new_todo_item():
     todo_item.save()
 
     return jsonify({'status': 'success'})
+
 
 @todo_item_blueprint.route('/<int:todo_item_id>', methods=['PUT'])
 def update_todo_item(todo_item_id):
@@ -56,6 +58,7 @@ def update_todo_item(todo_item_id):
 
     todo_item.save()
     return jsonify({'status': 'success'})
+
 
 @todo_item_blueprint.route('/<int:todo_item_id>', methods=['DELETE'])
 def delete_todo_item(todo_item_id):
