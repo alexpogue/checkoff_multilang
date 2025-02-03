@@ -50,9 +50,18 @@ docker run -it --network=checkoff_network -p 3000:3000 checkoff_python:latest
 ### Running standalone tiny docker image
 
 ```
-docker build -f Dockerfile.python-bookworm-slim-disable-dtags -t python_custom:bookworm-slim-disable-dtags .
 docker build -f Dockerfile.standalone -t checkoff_python:standalone .
 docker run -it --network=checkoff_network -p 3000:3000 --name checkoff_python checkoff_python:standalone
+```
+
+#### Optional: Building and pushing a new python_custom image
+
+Only need to do this when we need to change Python version or optimize the build's base image.
+
+```
+docker build -f Dockerfile.python-bookworm-slim-disable-dtags -t python_custom:bookworm-slim-disable-dtags .
+docker tag python_custom:bookworm-slim-disable-dtags alexpogue/python_custom:bookworm-slim-disable-dtags
+docker push alexpogue/python_custom:bookworm-slim-disable-dtags
 ```
 
 ### exec into into the standalone docker image

@@ -1,5 +1,5 @@
 #FROM python_manual:latest AS base
-FROM python_custom:bookworm-slim-disable-dtags AS base
+FROM alexpogue/python_custom:bookworm-slim-disable-dtags AS base
 
 WORKDIR /app
 
@@ -24,10 +24,8 @@ RUN pip install --upgrade pip \
 
 FROM base AS builder
 
-COPY docker-cmd.sh .
 COPY gunicorn.conf.py .
 COPY standalone.py .
-RUN chmod a+x docker-cmd.sh
 COPY ./checkoff_python ./checkoff_python
 
 RUN python3.13 -OO -m PyInstaller --onefile --add-data "checkoff_python/config.py:checkoff_python" --hidden-import "pysqlite2" --hidden-import "MySQLdb" --hidden-import "gunicorn.glogging" --hidden-import "gunicorn.workers.sync" standalone.py
