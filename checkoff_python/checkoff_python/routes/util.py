@@ -2,8 +2,9 @@ from flask import abort, request
 
 
 def get_by_id(model_cls, lookup_id, schema):
-    model_obj = model_cls.query.get(lookup_id)
-    if model_obj is None:
+    try:
+        model_obj = model_cls.get_by_id(lookup_id)
+    except model_cls.DoesNotExist:
         abort(404)
     result = schema.dump(model_obj)
     return result

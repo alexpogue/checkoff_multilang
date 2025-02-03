@@ -1,8 +1,6 @@
 flask
-flask-sqlalchemy
-flask-marshmallow
-marshmallow-sqlalchemy
-gunicorn
+peewee
+marshmallow-peewee
 PyMySQL
 gunicorn
 cryptography

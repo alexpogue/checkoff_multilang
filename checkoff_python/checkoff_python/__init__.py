@@ -14,6 +14,6 @@ def create_app(config_file=None):
     # Default Rust Axum doesn't include the ending slash, and there is no hard-and-fast rule for REST APIs
     app.url_map.strict_slashes = False
 
-    models.init_app(app)
+    models.init_app()
     routes.init_app(app)
     return app

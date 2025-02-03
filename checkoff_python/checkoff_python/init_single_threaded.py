@@ -12,19 +12,25 @@
 
 import json
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from checkoff_python.models.base import db
 
 def init_databases():
-    config_file = 'trex_uptime_monitor/config.py'
 
-    placeholder_app = Flask('placeholder_app')
-    placeholder_app.config.from_pyfile(config_file)
+    # NOTE: The following lines are commented because currently we don't need
+    # the app in order to call models.init_app(). We used to need it because
+    # database connection string was in the app config. Eventually we should
+    # move the connection string back to the app config, and these lines will be
+    # necessary again.
 
-    init_databases(placeholder_app)
+    #config_file = 'trex_uptime_monitor/config.py'
 
-    from trex_uptime_monitor import models
-    models.init_app(placeholder_app)
+    #placeholder_app = Flask('placeholder_app')
+    #placeholder_app.config.from_pyfile(config_file)
+
+    #init_databases(placeholder_app)
+
+    from checkoff_python import models
+    models.init_app()
 
     with placeholder_app.app_context():
         db.create_all()
