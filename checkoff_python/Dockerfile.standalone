@@ -24,6 +24,14 @@ RUN pip install --upgrade pip \
 
 FROM base AS builder
 
+# add scratchuser user/group for passwd file to copy to final image /etc/passwd
+# also create empty directories to copy to final build's /tmp
+# these are not used in following steps, but put in beginning to cache.
+RUN addgroup scratchuser \
+  && adduser --ingroup scratchuser --uid 1001 --shell /bin/false scratchuser \
+  && cat /etc/passwd | grep scratchuser > /app/passwd_scratchuser \
+  && mkdir /app/emptydir /app/busybin
+
 COPY gunicorn.conf.py .
 COPY standalone.py .
 COPY ./checkoff_python ./checkoff_python
@@ -33,23 +41,21 @@ RUN python3.13 -OO -m PyInstaller --onefile --add-data "checkoff_python/config.p
 WORKDIR /app/dist
 RUN staticx --strip standalone standalone_app
 
-# create empty directory to copy to final build's /tmp
-RUN mkdir /app/emptydir
-
 EXPOSE 3000
 
 CMD ["sleep", "1d"]
 
 FROM scratch
 
-# USERNAME fixes issue in python 3.13 that says `OSError: No username set in the
-# environment` when run in `from scratch` docker container which doesn't really
-# have a user.. So far it seems okay that it's not a "real user". Updating
-# dependencies might make this unnecessary. Saw error from sqlalchemy
-ENV USERNAME=blah
 ENV PYTHONMALLOC=mimalloc
 
-COPY --from=builder /app/dist/standalone_app standalone_app
-COPY --from=builder /app/emptydir /tmp
+COPY --from=builder /app/passwd_scratchuser /etc/passwd
+COPY --from=builder --chown=scratchuser /app/dist/standalone_app standalone_app
+COPY --from=builder --chown=scratchuser /app/emptydir /tmp
+
+# for copying busybox utilities if we need to debug
+COPY --from=builder --chown=scratchuser /app/busybin /busybin
+
+USER scratchuser
 
 ENTRYPOINT ["./standalone_app"]
