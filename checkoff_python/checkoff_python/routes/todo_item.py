@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, abort
 
-from ..models.base import db
 from ..models.todo_item import TodoItem, TodoItemSchema
 
 from .util import get_by_id, ensure_json_or_die

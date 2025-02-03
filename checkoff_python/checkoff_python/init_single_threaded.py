@@ -10,8 +10,6 @@
 # the issue, but I couldn't find the code in the main branch, despite the PR
 # showing closed.
 
-import json
-from flask import Flask
 from checkoff_python.models.base import db
 
 def init_databases():

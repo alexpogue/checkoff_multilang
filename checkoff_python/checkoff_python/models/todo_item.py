@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import CharField, BooleanField
 from .base import BaseModel
 from marshmallow_peewee import ModelSchema
 
