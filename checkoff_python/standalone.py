@@ -1,14 +1,17 @@
-# Required for using gunicorn from a distroless image since the `gunicorn` shell command does not work in its shell
-# Mostly copied from: https://dev.to/lionelmarco/how-to-add-flask-gunicorn-packages-to-a-distroless-docker-container-2ml2
+# Required for using gunicorn from a distroless image since the `gunicorn`
+# shell command does not work in its shell
+# Mostly copied from:
+# https://dev.to/lionelmarco/how-to-add-flask-gunicorn-packages-to-a
+#   -distroless-docker-container-2ml2
 
-# file:standalone.py
-from checkoff_python import server
 from checkoff_python.server import app
 import multiprocessing
 import gunicorn.app.base
 
+
 def number_of_workers():
-    return  (multiprocessing.cpu_count() * 2) + 1
+    return (multiprocessing.cpu_count() * 2) + 1
+
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
 
@@ -26,10 +29,10 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
     def load(self):
         return self.application
 
+
 if __name__ == '__main__':
     options = {
         'bind': '%s:%s' % ('0.0.0.0', '3000'),
         'workers': number_of_workers(),
     }
     StandaloneApplication(app, options).run()
-
