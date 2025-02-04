@@ -1,22 +1,26 @@
-#FROM python_manual:latest AS base
 FROM alexpogue/python_custom:bookworm-slim-disable-dtags AS base
-
-ENV PIP_ROOT_USER_ACTION=ignore
-
-WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y build-essential autoconf wget \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get autoremove -y && apt-get clean 
 
+RUN addgroup nonroot \
+  && adduser --ingroup nonroot --uid 1001 --shell /bin/false nonroot
+USER nonroot
+
+WORKDIR /app
+
 RUN wget --no-check-certificate https://github.com/NixOS/patchelf/archive/0.10.tar.gz && \
     tar xzf 0.10.tar.gz && \
     cd patchelf-0.10/ && \
     ./bootstrap.sh && \
     ./configure && \
-    make && \
-    make install
+    make
+
+USER root
+RUN cd patchelf-0.10 && make install
+USER nonroot
 
 COPY requirements.txt .
 
@@ -26,13 +30,12 @@ RUN pip install --upgrade pip \
 
 FROM base AS builder
 
-# add scratchuser user/group for passwd file to copy to final image /etc/passwd
-# also create empty directories to copy to final build's /tmp
-# these are not used in following steps, but put in beginning to cache.
-RUN addgroup scratchuser \
-  && adduser --ingroup scratchuser --uid 1001 --shell /bin/false scratchuser \
-  && cat /etc/passwd | grep scratchuser > /app/passwd_scratchuser \
-  && mkdir /app/emptydir /app/busybin
+USER nonroot
+
+# copy nonroot user passwd line to copy to final image's /etc/passwd, and
+# create empty directory to copy to final build's /tmp
+RUN cat /etc/passwd | grep nonroot > /app/passwd_nonroot \
+  && mkdir /app/emptytmp
 
 COPY gunicorn.conf.py .
 COPY standalone.py .
@@ -41,7 +44,7 @@ COPY ./checkoff_python ./checkoff_python
 RUN python3.13 -OO -m PyInstaller --onefile --add-data "checkoff_python/config.py:checkoff_python" --hidden-import "pysqlite2" --hidden-import "MySQLdb" --hidden-import "gunicorn.glogging" --hidden-import "gunicorn.workers.sync" standalone.py
 
 WORKDIR /app/dist
-RUN staticx --strip standalone standalone_app
+RUN python3.13 -OO -m staticx --strip standalone standalone_app
 
 EXPOSE 3000
 
@@ -51,13 +54,10 @@ FROM scratch
 
 ENV PYTHONMALLOC=mimalloc
 
-COPY --from=builder /app/passwd_scratchuser /etc/passwd
-COPY --from=builder --chown=scratchuser /app/dist/standalone_app standalone_app
-COPY --from=builder --chown=scratchuser /app/emptydir /tmp
+COPY --from=builder /app/passwd_nonroot /etc/passwd
+COPY --from=builder --chown=nonroot /app/dist/standalone_app standalone_app
+COPY --from=builder --chown=nonroot /app/emptytmp /tmp
 
-# for copying busybox utilities if we need to debug
-COPY --from=builder --chown=scratchuser /app/busybin /busybin
-
-USER scratchuser
+USER nonroot
 
 ENTRYPOINT ["./standalone_app"]

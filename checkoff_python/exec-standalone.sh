@@ -15,7 +15,7 @@ fi
 
 docker cp ${SCRIPT_DIR}/tmp/busybox "$scratch_container_id":/busybox
 docker exec -it "$scratch_container_id" /busybox sh -c '
-export PATH="/busybin:$PATH"
-/busybox mkdir -p /busybin
-/busybox --install /busybin
+export PATH="/tmp/busybin:$PATH"
+/busybox mkdir -p /tmp/busybin
+/busybox --install /tmp/busybin
 sh'
