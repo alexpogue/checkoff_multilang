@@ -98,11 +98,11 @@ func main() {
   }
   err = db.AutoMigrate(&TodoItem{})
 
-  http.HandleFunc("/todo_item", todoItemHandler)
-  http.HandleFunc("/todo_item/{id}", todoItemParameterHandler)
+  http.HandleFunc("/todo-item", todoItemHandler)
+  http.HandleFunc("/todo-item/{id}", todoItemParameterHandler)
 
-  log.Println("Starting server on :8080")
-  log.Fatal(http.ListenAndServe(":8080", nil))
+  log.Println("Starting server on :3000")
+  log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 func todoItemHandler(w http.ResponseWriter, r *http.Request) {
