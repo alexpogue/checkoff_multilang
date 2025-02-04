@@ -1,6 +1,6 @@
-flask
-peewee
-marshmallow-peewee
-PyMySQL
-gunicorn
-cryptography
+flask==3.1.0
+peewee==3.17.8
+marshmallow-peewee==5.0.0
+PyMySQL==1.1.1
+gunicorn==23.0.0
+cryptography==44.0.0
