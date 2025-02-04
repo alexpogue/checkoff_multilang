@@ -1,6 +1,8 @@
 #FROM python_manual:latest AS base
 FROM alexpogue/python_custom:bookworm-slim-disable-dtags AS base
 
+ENV PIP_ROOT_USER_ACTION=ignore
+
 WORKDIR /app
 
 RUN apt-get update \
