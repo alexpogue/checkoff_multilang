@@ -64,6 +64,17 @@ docker tag python_custom:bookworm-slim-disable-dtags alexpogue/python_custom:boo
 docker push alexpogue/python_custom:bookworm-slim-disable-dtags
 ```
 
+#### Optional: Building and pushing a new checkoff_python_base image
+
+Only need to do this when we need to change our dependencies (mysqlclient is notable), PyInstaller, or staticx.
+
+```
+docker build -f Dockerfile.base -t checkoff_python_base:latest .
+docker tag checkoff_python_base:latest alexpogue/checkoff_python_base:latest
+docker push alexpogue/checkoff_python_base:latest
+```
+
+
 ### exec into into the standalone docker image
 ```
 ./exec-standalone.sh

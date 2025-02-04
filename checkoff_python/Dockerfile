@@ -1,28 +1,35 @@
-FROM python:3.12.4-slim AS base
-
-ENV PIP_ROOT_USER_ACTION=ignore
+# we use 3.11 because that's the latest one in the debian-bookworm apt-get packages
+# could change to use ubuntu and add deadsnakes ppa instead.. That ppa doesn't
+# support debian though. We only updated to 3.13 to get mimalloc for musl, so
+# 3.11 is probably okay here
+FROM python:3.11-slim-bookworm AS builder
 
 WORKDIR /app
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends default-libmysqlclient-dev gcc pkg-config binutils && \
+    apt-get autoremove -y && apt-get clean
+
 COPY requirements.txt .
 
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-COPY docker-cmd.sh .
+FROM debian:bookworm-slim
+
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/dist-packages
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3.11 default-libmysqlclient-dev && \
+    apt-get autoremove -y && apt-get clean
+
 COPY gunicorn.conf.py .
-RUN chmod a+x docker-cmd.sh
 COPY ./checkoff_python ./checkoff_python
+COPY ./standalone.py .
 
 EXPOSE 3000
 
-CMD ["./docker-cmd.sh"]
+RUN addgroup nonroot && \
+    adduser --ingroup nonroot --uid 1001 --shell /bin/false nonroot
+USER nonroot
 
-FROM gcr.io/distroless/python3
-WORKDIR /app
-
-COPY --from=base /app /app
-COPY --from=base /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY standalone.py .
-
-ENV PYTHONPATH=/usr/local/lib/python3.12/site-packages
-CMD ["standalone.py"]
+CMD ["python3.11", "standalone.py"]
