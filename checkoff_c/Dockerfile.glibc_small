@@ -1,0 +1,104 @@
+# arg included so we can copy an SSL certificate needed for Rust build on original developer's machine
+ARG BUILD_ENV="copy"
+
+# The seemingly hacky lines below do a conditional copy based on the `BUILD_ENV` build argument. Strategy uses multi-stage builds (inspiration: https://stackoverflow.com/a/54245466)
+FROM debian:bookworm-slim AS build_no_copy
+# no-op
+
+FROM debian:bookworm-slim AS build_copy
+COPY certs/ certs/
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get autoremove -y && apt-get clean
+
+ONBUILD RUN cat certs/ZscalerRootCertificate-2048-SHA256.pem > /etc/ssl/certs/ZscalerRootCertificate-2048-SHA256.pem
+
+FROM build_${BUILD_ENV} AS build_intermediate
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libjansson-dev libgnutls28-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get autoremove -y && apt-get clean
+
+WORKDIR /app
+
+#  wget build-essential cmake libgcc-s1 musl-tools xz-utils m4 pkg-config \
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  wget build-essential cmake xz-utils m4 pkg-config libsystemd-dev zlib1g-dev libcurl4-gnutls-dev libgcrypt20-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get autoremove -y && apt-get clean \
+\
+  && wget --no-check-certificate https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-1.0.1.tar.gz \
+  && tar zxvf libmicrohttpd-1.0.1.tar.gz \
+  && cd libmicrohttpd-1.0.1 \
+  && ./configure \
+  && make \
+  && make install \
+  && make clean \
+  && cd /app \
+  && rm -r libmicrohttpd-1.0.1 libmicrohttpd-1.0.1.tar.gz \
+\
+  && wget --no-check-certificate https://github.com/babelouest/orcania/archive/refs/tags/v2.3.3.tar.gz \
+  && tar zxvf v2.3.3.tar.gz \
+  && cd orcania-2.3.3 \
+  && mkdir build \
+  && cd build \
+  && cmake .. \
+  && make \
+  && make install \
+  && make clean \
+  && cd /app \
+  && rm -r orcania-2.3.3 v2.3.3.tar.gz \
+\
+  && wget --no-check-certificate https://github.com/babelouest/yder/archive/refs/tags/v1.4.20.tar.gz \
+  && tar zxvf v1.4.20.tar.gz \
+  && cd yder-1.4.20 \
+  && mkdir build \
+  && cd build \
+  && cmake .. \
+  && make \
+  && make install \
+  && make clean \
+  && cd /app \
+  && rm -r yder-1.4.20 v1.4.20.tar.gz \
+\
+  && wget --no-check-certificate https://github.com/babelouest/ulfius/archive/refs/tags/v2.7.15.tar.gz \
+  && tar zxvf v2.7.15.tar.gz \
+  && cd ulfius-2.7.15 \
+  && mkdir build \
+  && cd build \
+  && cmake -DWITH_CURL=off -DWITH_WEBSOCKET=off -DBUILD_UWSC=off -DCMAKE_MODULE_PATH=/orcania-2.3.3/cmake-modules\;/yder-1.4.20/cmake-modules .. \
+  && make \
+  && make install \
+  && make clean \
+  && cd /app \
+  && rm -r ulfius-2.7.15 v2.7.15.tar.gz \
+\
+  && apt-get remove -y --purge wget build-essential cmake xz-utils m4 pkg-config libsystemd-dev zlib1g-dev libcurl4-gnutls-dev libgcrypt20-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get autoremove -y && apt-get clean
+
+
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib"
+
+#RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+#  && rm -rf /var/lib/apt/lists/* \
+#  && apt-get autoremove -y && apt-get clean
+
+COPY main.c .
+
+#RUN gcc -static -static-libgcc -static-libstdc++ -o main main.c -L/usr/local/lib -L/usr/lib/gcc/x86_64-linux-gnu/12/ -lulfius
+
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+  && gcc -Wl,-verbose=99 -o main main.c -L/usr/local/lib -L/usr/lib/gcc/x86_64-linux-gnu/12/ -lulfius -ljansson \
+  && apt-get remove --purge -y gcc \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get autoremove -y && apt-get clean
+
+#RUN gcc -Wl,-verbose=99 -o main main.c -L/usr/local/lib -L/usr/lib/gcc/x86_64-linux-gnu/12/ -lulfius -ljansson
+#RUN musl-gcc -Wl,-verbose=99 -static -static-libgcc -static-libstdc++ -o main main.c -L/usr/local/lib -L/usr/lib/gcc/x86_64-linux-gnu/12/ -lulfius
+#RUN gcc -Wl,-Bstatic -o main main.c -L/usr/local/lib -lulfius -L/usr/lib/gcc/x86_64-linux-gnu/12/ -lgcc_s
+CMD ["./main"]
+#CMD ["sleep", "1d"]
