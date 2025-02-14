@@ -2,8 +2,16 @@ from alpine:3.21 as build_intermediate
 
 WORKDIR /app
 
+RUN apk update && apk add gcc make cmake musl-dev nettle-dev gmp-dev jansson-dev jansson-static autoconf automake libtool gettext-dev gettext-static libunistring-dev libunistring-static xz gtk-doc git bison gperf ca-certificates wget libev-dev p11-kit-dev libtasn1-dev xz texinfo zlib-static
 
-RUN apk update && apk add build-base cmake
+COPY certs/ certs/
+RUN cat certs/ZscalerRootCertificate-2048-SHA256.pem >> /etc/ssl/certs/ca-certificates.crt
+
+RUN update-ca-certificates \
+  && wget --version \
+  && echo "check_certificate = off" >> /etc/wgetrc \
+  && echo "ca_certificate = /etc/ssl/certs/ca-certificates.crt" >> /etc/wgetrc \
+  && git config --global http.sslVerify false
 
 RUN wget --no-check-certificate https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-1.0.1.tar.gz \
   && tar zxvf libmicrohttpd-1.0.1.tar.gz \
@@ -33,68 +41,16 @@ RUN wget --no-check-certificate https://github.com/babelouest/yder/archive/refs/
   && make install \
   && make clean
 
-RUN wget --no-check-certificate https://github.com/gnutls/gnutls/archive/refs/tags/3.8.9.tar.gz \
-  && tar zxvf 3.8.9.tar.gz
-
-RUN apk add nettle-dev nettle-static gmp-dev jansson-dev jansson-static autoconf automake libtool gettext-dev libunistring-dev
-
-COPY certs/ certs/
-RUN cat certs/ZscalerRootCertificate-2048-SHA256.pem >> /etc/ssl/certs/ca-certificates.crt
-
-RUN apk add gtk-doc git bison gperf
+RUN apk add patch
 
 RUN git clone https://github.com/gnutls/gnutls.git \
   && cd gnutls \
-  && git checkout 3.8.9
-
-RUN apk add ca-certificates wget \
-  && update-ca-certificates \
-  && wget --version \
-  && echo "check_certificate = off" >> /etc/wgetrc \
-  && echo "ca_certificate = /etc/ssl/certs/ca-certificates.crt" >> /etc/wgetrc \
-  && git config --global http.sslVerify false
-
-RUN cd gnutls \
-  && ./bootstrap
-
-RUN apk add libev-dev p11-kit-dev libtasn1-dev
-
-  #&& ./configure --enable-static --prefix=/usr --disable-gtk-doc --with-included-libtasn1 \
-
-RUN cd gnutls \
-  && ./configure --enable-static --prefix=/usr --disable-gtk-doc --without-p11-kit
-
-RUN apk add texinfo
-
-RUN cd gnutls \
-  && make
-
-#RUN cd gnutls \
-#  && make check
-
-RUN cd gnutls \
+  && git checkout 3.8.9 \
+  && ./bootstrap \
+  && ./configure --enable-static --prefix=/usr --disable-gtk-doc --without-p11-kit \
+  && make \
   && make install \
   && make clean
-
-#RUN cd gnutls-3.8.9 \
-#  && wget https://gitlab.com/gnutls/cligen/-/archive/main/cligen-main.tar.gz \
-#  && tar xf cligen-main.tar.gz \
-#  && mv ./cligen-main/* cligen/ \
-#  && rm -r cligen-main \
-#  && cd /app/gnutls-3.8.9 \
-#  && mkdir -p src/gl/m4 lib/unistring/m4 \
-#  && gtkdocize \
-#  && aclocal \
-#  && autoreconf --install \
-#  && autoconf \
-#  && ./configure --enable-static --prefix=/usr --disable-gtk-doc \
-#  && automake --add-missing \
-#  && make \
-#  && make check \
-#  && make install \
-#  && make clean
-
-#&& cmake -DGNUTLS_LIBRARY=/usr/lib -DBUILD_STATIC=on -DWITH_CURL=off -DWITH_WEBSOCKET=off -DBUILD_UWSC=off -DCMAKE_MODULE_PATH=/orcania-2.3.3/cmake-modules\;/yder-1.4.20/cmake-modules .. \
 
 RUN wget --no-check-certificate https://github.com/babelouest/ulfius/archive/refs/tags/v2.7.15.tar.gz \
   && tar zxvf v2.7.15.tar.gz \
@@ -115,11 +71,6 @@ RUN wget --no-check-certificate https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.20.0
   && make install \
   && make clean
 
-COPY main.c .
-RUN apk add gettext-static xz
-RUN apk del build-base gmp-dev
-RUN apk add gcc make musl-dev
-
 RUN wget --no-check-certificate https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz \
   && tar xf gmp-6.3.0.tar.xz \
   && cd gmp-6.3.0 \
@@ -127,8 +78,6 @@ RUN wget --no-check-certificate https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz
   && make \
   && make install \
   && make clean
-
-RUN apk del nettle-dev nettle-static
 
 RUN wget --no-check-certificate https://ftp.gnu.org/gnu/nettle/nettle-3.10.1.tar.gz \
   && tar zxvf nettle-3.10.1.tar.gz \
@@ -138,29 +87,11 @@ RUN wget --no-check-certificate https://ftp.gnu.org/gnu/nettle/nettle-3.10.1.tar
   && make install \
   && make clean
 
-#RUN wget --no-check-certificate https://github.com/p11-glue/p11-kit/archive/refs/tags/0.25.5.tar.gz \
-#  && tar zxvf 0.25.5.tar.gz \
-#  && cd p11-kit-0.25.5 \
-#  && ./autogen.sh --enable-static --disable-shared \
-#  && make \
-#  && make install \
-#  && make clean
+COPY main.c .
 
-#RUN git clone --recurse-submodules https://github.com/p11-glue/p11-kit.git \
-#  && cd p11-kit \
-#  && git checkout 0.25.5 \
-#  && ./autogen.sh --enable-static --disable-shared \
-#  && make \
-#  && make install \
-#  && make clean
-
-RUN apk add libunistring-static zlib-static
-
-#RUN gcc -static -Xlinker --verbose -o main main.c -L/usr/local/lib -lulfius -ljansson -lyder -lorcania -lmicrohttpd -lgnutls -ltasn1 -lintl -lhogweed -lnettle -lgmp -lunistring -lz
 RUN gcc -static -o main main.c -L/usr/local/lib -lulfius -ljansson -lyder -lorcania -lmicrohttpd -lgnutls -ltasn1 -lintl -lhogweed -lnettle -lgmp -lunistring -lz
 
 CMD ["./main"]
-#CMD ["sleep", "1h"]
 
 from scratch
 
