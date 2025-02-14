@@ -1,0 +1,41 @@
+from alpine:3.21 as build_intermediate
+
+WORKDIR /app
+
+RUN apk update && apk add gcc make ca-certificates wget
+RUN apk add git
+RUN apk add musl-dev
+
+COPY certs/ certs/
+RUN cat certs/ZscalerRootCertificate-2048-SHA256.pem >> /etc/ssl/certs/ca-certificates.crt
+
+RUN update-ca-certificates \
+  && wget --version \
+  && echo "check_certificate = off" >> /etc/wgetrc \
+  && echo "ca_certificate = /etc/ssl/certs/ca-certificates.crt" >> /etc/wgetrc \
+  && git config --global http.sslVerify false
+
+RUN wget --no-check-certificate https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-1.0.1.tar.gz \
+  && tar zxvf libmicrohttpd-1.0.1.tar.gz \
+  && cd libmicrohttpd-1.0.1 \
+  && ./configure --disable-httpupgrade --disable-messages --disable-epoll \
+  && make \
+  && make install \
+  && make clean
+
+RUN wget --no-check-certificate https://github.com/zserge/jsmn/archive/refs/tags/v1.1.0.tar.gz \
+  && tar zxvf v1.1.0.tar.gz \
+  && cp jsmn-1.1.0/jsmn.h .
+
+COPY main_mhd.c .
+
+RUN gcc -static -o main_mhd main_mhd.c -lmicrohttpd
+
+CMD ["./main"]
+#CMD ["sleep", "1h"]
+
+from scratch
+
+WORKDIR /app
+COPY --from=build_intermediate /app/main_mhd .
+CMD ["./main_mhd", "8080"]
